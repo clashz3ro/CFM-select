@@ -166,7 +166,6 @@ proxy-groups:
   disable-udp: false  
   interval: '60'
   tolerance: '99'
-  disable-udp: false
   url: http://www.gstatic.com/generate_204
   use:
     - KONEKSI_1
