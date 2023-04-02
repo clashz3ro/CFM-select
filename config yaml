@@ -1,0 +1,299 @@
+redir-port: 9797
+tproxy-port: 9898
+mode: rule
+allow-lan: true
+unified-delay: true
+bind-address: '*'
+# info / warning / error / debug / silent
+log-level: silent
+ipv6: false
+geodata-mode: true
+geodata-loader: memconservative
+external-controller: 0.0.0.0:9090 
+# external-controller-tls: 0.0.0.0:9091 # RESTful API HTTPS device
+# secret: "123456"
+external-ui: ./dashboard/dist
+# tcp-concurrent: false
+# inbound-tfo: false
+# global-client-fingerprint: chrome
+# interface-name: "rmnet_data+"
+# routing-mark: 233
+geox-url:
+  mmdb: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb"
+  geoip: "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/geoip.dat"
+  geosite: "https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/geosite.dat"
+find-process-mode: always
+
+profile:
+  store-selected: true
+  store-fake-ip: false
+
+# experimental:
+  # sniff-tls-sni: false
+  # udp-fallback-match: false
+
+# sniffer:
+  # enable: false
+  # ## 对 redir-host 类型识别的流量进行强制嗅探
+  # ## 如：Tun、Redir 和 TProxy 并 DNS 为 redir-host 皆属于
+  # force-dns-mapping: true
+  # parse-pure-ip: true
+  # override-destination: true
+  # sniff:
+    # TLS:
+    # #  ports:[443, 8443]
+    # HTTP:
+      # ports: [80, 8080-8880]
+      # override-destination: true
+  # force-domain:
+    # - +.v2ex.com
+  # # skip-domain:
+    # # - +.google.com
+  # sniffing:
+    # - tls
+    # - http
+  # port-whitelist:
+    # - "80"
+    # - "443"
+
+# tun:
+  # enable: true
+  # # biarkan default utun
+  # device: utun
+  # mtu: 9000
+  # # gvisor / lwip / system
+  # stack: system
+  # dns-hijack:
+    # - any:53
+  # # bagi yg awam, kalau TUN on wajib true, only armv8/64
+  # auto-route: true
+  # auto-detect-interface: true
+  # # end
+  # inet4-address: 172.19.0.1/30
+  # inet6-address: [fdfe:dcba:9876::1/126]
+  # strict_route: false
+  # # include_android_user:
+  # # - 0
+  # # - 10
+  # # include_package:
+  # # - com.android.chrome
+  # # exclude_package:
+  # # - com.android.captiveportallogin
+
+dns:
+  enable: true
+  ipv6: false
+  prefer-h3: true
+  default-nameserver:
+    # cloudflare
+    - '1.1.1.1#BFM'
+    # google
+    - '8.8.8.8'
+  listen: 0.0.0.0:1053
+  use-hosts: true
+  # redir-host / fake-ip
+  enhanced-mode: fake-ip
+  fake-ip-range: 28.0.0.1/8
+  fake-ip-filter:
+    - '+.lan'
+  nameserver:
+    # cloudflare
+    - '1.1.1.1'
+    - 'tls://1.0.0.1:853#BFM'
+    # google
+    - '8.8.8.8#BFM'
+    - 'tls://8.8.4.4:853'
+  # proxy-server-nameserver:
+    # - '1.1.1.1'
+  # nameserver-policy: { "geosite:youtube": [1.1.1.1, 8.8.8.8] }
+
+  fallback:
+    - 'https://8.8.8.8/dns-query'
+    - 'tcp://8.8.4.4'
+    - 'quic://dns.adguard.com:784'
+  fallback-filter:
+    geoip: false
+    geoip-code: '!ID'
+    geosite:
+      # - gfw
+    ipcidr:
+      # - 240.0.0.0/4
+    domain:
+      - '+.google.com'
+      - '+.facebook.com'
+      - '+.youtube.com'
+      - '+.github.com'
+
+hosts:
+  # block update system android
+  'ota.googlezip.net': 127.0.0.1
+  'ota-cache1.googlezip.net': 127.0.0.1
+  'ota-cache2.googlezip.net': 127.0.0.1
+
+proxies:
+proxy-providers:
+  KONEKSI_1:
+    type: http
+    path: ./confs/clash_1.yaml
+    url: "https://raw.githubusercontent.com/clashz3ro/AUTO-CFM/main/clash_1.yaml"
+    interval: '60'
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '60'
+  KONEKSI_2:
+    type: http
+    path: ./confs/clash_2.yaml
+    url: "https://raw.githubusercontent.com/clashz3ro/AUTO-CFM/main/clash_2.yaml"
+    interval: '60'
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '60'
+proxy-groups:
+- name: SIMASTER-MAGISK-AUTO
+  type: select
+  disable-udp: false  
+  url: http://www.gstatic.com/generate_204
+  interval: '60'
+  proxies:
+  - KONEKSI-PING
+  - KONEKSI-FALLBACK
+  - KONEKSI-LOADBALANCE
+  - KONEKSI-SELECT
+- name: KONEKSI-SELECT
+  type: select
+  disable-udp: false  
+  interval: '60'
+  tolerance: '99'
+  url: http://www.gstatic.com/generate_204
+  use:
+    - KONEKSI_1
+    - KONEKSI_2
+- name: KONEKSI-PING
+  type: url-test    
+  interval: '60'
+  tolerance: '99'
+  disable-udp: false
+  url: http://www.gstatic.com/generate_204
+  use:
+    - KONEKSI_1
+    - KONEKSI_2
+- name: KONEKSI-FALLBACK
+  type: fallback
+  disable-udp: false
+  use:
+    - KONEKSI_1
+    - KONEKSI_2
+- name: KONEKSI-LOADBALANCE
+  type: load-balance
+  tolerance: '99'
+  disable-udp: false
+  use:
+    - KONEKSI_1
+    - KONEKSI_2
+  url: http://www.gstatic.com/generate_204
+  interval: '60'
+- name: WHATSAPP
+  type: select
+  disable-udp: false
+  proxies:
+    - SIMASTER-MAGISK-AUTO
+    - DIRECT
+  url: http://www.gstatic.com/generate_204
+  interval: '60'
+- name: GAMING
+  type: select
+  disable-udp: false
+  proxies:
+    - SIMASTER-MAGISK-AUTO
+    - DIRECT
+  url: http://www.gstatic.com/generate_204
+  interval: '60'
+rule-providers:
+  Game:
+    type: http
+    behavior: domain
+    path: ./confs/rule-game.yaml
+    url: https://bit.ly/3X2SvcL
+    interval: 60
+  Sosmed:
+    type: http
+    behavior: domain
+    path: ./confs/rule-sosmed.yaml
+    url: https://bit.ly/3I4HG5I
+    interval: 60
+  Stream:
+    type: http
+    behavior: domain
+    path: ./confs/rule-stream.yaml
+    url: https://bit.ly/3PU6RJP
+    interval: 60
+  Olshop:
+    type: http
+    behavior: domain
+    path: ./confs/rule-olshop.yaml
+    url: https://bit.ly/3Wp85PH
+    interval: 60
+  Bank:
+    type: http
+    behavior: domain
+    path: ./confs/rule-bank.yaml
+    url: https://bit.ly/3hN7JUh
+    interval: 60
+  Whatsapp:
+    type: http
+    behavior: domain
+    path: ./confs/rule-whatsapp.yaml
+    url: http://bit.ly/3Vkdh6g
+    interval: 60
+script:
+  code: |
+    def main(ctx, metadata):
+        ruleset_action = {"Game": "GAMING",
+            "Sosmed": "SIMASTER-MAGISK-AUTO",
+            "Stream": "SIMASTER-MAGISK-AUTO",
+            "Olshop": "SIMASTER-MAGISK-AUTO",
+            "Bank": "SIMASTER-MAGISK-AUTO",
+            "Whatsapp": "WHATSAPP",
+          }
+
+        port = int(metadata["dst_port"])
+
+        if metadata["network"] == "UDP":
+            if port == "21,22,23,53,80,443,8443":
+                ctx.log('[Script] matched QUIC traffic use SIMASTER-MAGISK-AUTO')
+                return "SIMASTER-MAGISK-AUTO"
+
+        if metadata["dst_ip"] == "":
+            metadata["dst_ip"] = ctx.resolve_ip(metadata["host"])
+
+        port_list = [21, 22, 23, 53, 80, 81, 123, 443, 853, 5353, 8000, 8008, 8080, 8081, 8090, 8443, 8888, 9993]
+        if port not in port_list:
+            ctx.log('[Script] not common port use GAMING')
+            return "GAMING"
+
+        if metadata["dst_ip"] == "":
+            return "DIRECT"
+
+        for ruleset in ruleset_action:
+            if ctx.rule_providers[ruleset].match(metadata):
+                return ruleset_action[ruleset]
+
+        code = ctx.geoip(metadata["dst_ip"])
+        if code == "ID":
+            ctx.log('[Script] Geoip ID')
+            return "SIMASTER-MAGISK-AUTO"
+
+        ctx.log('[Script] SIMASTER-AUTO')
+        return "SIMASTER-MAGISK-AUTO"
+rules:
+- IP-CIDR,198.18.0.1/16,REJECT,no-resolve
+- RULE-SET,Game,GAMING
+- RULE-SET,Sosmed,SIMASTER-MAGISK-AUTO
+- RULE-SET,Stream,SIMASTER-MAGISK-AUTO
+- RULE-SET,Olshop,SIMASTER-MAGISK-AUTO
+- RULE-SET,Bank,SIMASTER-MAGISK-AUTO
+- RULE-SET,Whatsapp,WHATSAPP
+- GEOIP,ID,SIMASTER-MAGISK-AUTO
+- MATCH,SIMASTER-MAGISK-AUTO
