@@ -153,7 +153,6 @@ proxy-providers:
 proxy-groups:
 - name: SIMASTER-MAGISK-AUTO
   type: select
-  strategy: round-robin
   disable-udp: false  
   url: http://www.gstatic.com/generate_204
   interval: '60'
@@ -163,7 +162,7 @@ proxy-groups:
   - KONEKSI-LOADBALANCE
   - KONEKSI-SELECT
 - name: KONEKSI-SELECT
-  type: load-balance
+  type: select
   strategy: round-robin
   disable-udp: false  
   url: http://www.gstatic.com/generate_204
