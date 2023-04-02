@@ -163,7 +163,6 @@ proxy-groups:
   - KONEKSI-SELECT
 - name: KONEKSI-SELECT
   type: select
-  strategy: round-robin
   disable-udp: false  
   url: http://www.gstatic.com/generate_204
   interval: '60'
